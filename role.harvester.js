@@ -7,7 +7,7 @@ Creep.prototype.roleHarvester = function(idivar){
 		this.doHarvest(idivar);
 	}
 	else
-	{
+	{		
 		var targets = this.room.find(FIND_STRUCTURES, {
 				filter: (structure) => {
 					return (structure.structureType == STRUCTURE_EXTENSION ||
@@ -21,6 +21,13 @@ Creep.prototype.roleHarvester = function(idivar){
 			if(this.transfer(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE)
 			{
 				this.moveTo(targets[0]);
+			}
+			
+			if(this.memory.activity !== 4)
+			{
+				this.memory.activity = 4;
+				var target = this.pos.findClosestByPath(FIND_CONSTRUCTION_SITES);
+				this.memory.target = target.id;
 			}
 		}
 	}

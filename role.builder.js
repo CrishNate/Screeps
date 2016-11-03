@@ -5,23 +5,18 @@ var roleBuilder = {
     /** @param {Creep} creep **/
     run: function(creep, idivar) {
 
-	    if(creep.memory.building && creep.carry.energy == 0)
+	    if(creep.memory.activity !== 3 && creep.carry.energy == creep.carryCapacity)
 		{
-            creep.memory.building = false;
-	    }
-		
-	    if(!creep.memory.building && creep.carry.energy == creep.carryCapacity)
-		{
-	        creep.memory.building = true;
+	        creep.memory.activity = 3;
 			var target = creep.pos.findClosestByPath(FIND_CONSTRUCTION_SITES);
-			creep.memory.constructTarget = target.id;
+			creep.memory.target = target.id;
 	    }
 
-	    if(creep.memory.building)
+	    if(creep.memory.activity == 3)
 		{
-			var target = Game.getObjectById(creep.memory.constructTarget);
-
-			if(targets.length)
+			var target = Game.getObjectById(creep.memory.target);
+			
+			if(target !== undefined && creep.carry.energy > 0)
 			{
                 if(creep.build(target) == ERR_NOT_IN_RANGE)
 				{
