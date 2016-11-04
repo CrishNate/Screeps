@@ -7,4 +7,4 @@
  * mod.thing == 'a thing'; // true
  */
  
-// Creep.js
+// Transporter.js

@@ -1,37 +1,40 @@
-/*
- * Module code goes here. Use 'module.exports' to export things:
- * module.exports.thing = 'a thing';
- *
- * You can import it from another modules like this:
- * var mod = require('spawn');
- * mod.thing == 'a thing'; // true
- */
- 
 // Transporter.js
 
-var Transporter = function(creep, room) {
-  Creep.call(this, creep, room);
+var Transporter = {
+	
+    tick: function (creep, activity, targetID) 
+    {
+        // getting sources
+        if (activity == 'transporting')
+        {
+            // transporting sources
+            var construction = Game.getObjectById(targetID);
+
+            if (!construction || (construction && creep.transfer(construction, RESOURCE_ENERGY) == ERR_INVALID_TARGET))
+            {
+                var construct = creep.pos.findClosestByRange(FIND_STRUCTURES, {
+                    filter: (structure) => { 
+                        return (structure.structureType == STRUCTURE_EXTENSION 
+                            || structure.structureType == STRUCTURE_SPAWN 
+                            || structure.structureType == STRUCTURE_TOWER) 
+                            && structure.energy < structure.energyCapacity; 
+                    }
+                });
+                                
+                if (construct)
+                {
+                    creep.memory.targetID = construct.id;
+                    targetID = construct.id;
+                }
+            }
+
+            construction = Game.getObjectById(targetID);
+            if (construction && creep.transfer(construction, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE)
+            {
+                creep.moveTo(construction);
+            }
+        }
+    }
 };
 
 module.exports = Transporter;
-
-Transporter.prototype = Creep.prototype;
-
-Transporter.prototype.tick = function() {
-  var creep = this.creep;
-    if (creep.energy < creep.energyCapacity) {
-        var miner = this.room.findByRole(creep, "miner");
-        console.log(miner);
-        if (miner !== null) {
-            //console.log(miner[0].name);
-            //creep.moveTo(miner);
-
-        } else
-            console.log("no miners found");
-    } else {
-        console.log("moving to drop");
-        //var drop = find.nearestEnergyDropOff(creep);
-        //creep.moveTo(drop);
-        //creep.transferEnergy(drop);
-    }
-};

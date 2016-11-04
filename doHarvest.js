@@ -11,19 +11,18 @@ Creep.prototype.doHarvest = function(idivar)
 {
 	if(this.memory.activity !== 1)
 	{
-		this.memory.activity = 1;
-		var target = this.pos.findClosestByPath(FIND_SOURCES);
-
-		if (target !== undefined)
+		var source = this.pos.findClosestByRange(FIND_SOURCES);
+		
+		if (source)
 		{
-			this.memory.target = target.id;
-			this.memory.activity = 0;
+			this.memory.activity = 1;
+			this.memory.targetID = source.id;
 		}
 	}
 	
-	if(this.memory.target !== undefined)
+	if(this.memory.targetID !== undefined)
 	{
-		var target = Game.getObjectById(this.memory.target);
+		var target = Game.getObjectById(this.memory.targetID);
 		if(this.harvest(target) == ERR_NOT_IN_RANGE)
 		{
 			this.moveTo(target);
