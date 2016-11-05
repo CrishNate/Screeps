@@ -7,7 +7,8 @@
  * mod.thing == 'a thing'; // true
  */
 
-var minCreepsAmount = 12;
+var minWorkersAmount = 8;
+var minWarriorsAmount = 3;
 
 Spawn.prototype.createConstructionSites = function (path, constuction) {
     for (var index in path) {
@@ -40,20 +41,41 @@ Spawn.prototype.createRoads = function () {
 
 Spawn.prototype.createCreeps = function ()
 {
-    var amount = 0;
-    if (Game.creeps.length !== undefined)
+    var workersAmount = 0;
+    var warriorsAmount = 0;
+    for (var index in Game.creeps)
     {
-        amount = Game.creeps.length;
+        var creep = Game.creeps[index];
+        var type = creep.memory.type;
+
+        if (type == 'worker')
+        {
+            workersAmount += 1;
+        };
+
+        if (type == 'warrior')
+        {
+            warriorsAmount += 1;
+        };
     }
 
-    if (amount < minCreepsAmount)
+    if (workersAmount < minWorkersAmount)
     {
         var name = this.createCreep([WORK, MOVE, MOVE, CARRY, CARRY], undefined,
 			{ type: 'worker', activity: '' })
 
         if (!(name < 0))
         {
-            console.log("Created creep:" + name);
+            console.log("Created worker:" + name);
+        }
+    }
+
+    if (warriorsAmount < minWarriorsAmount) {
+        var name = this.createCreep([ATTACK, ATTACK, ATTACK, MOVE, MOVE], undefined,
+			{ type: 'warrior', activity: 'idle' })
+
+        if (!(name < 0)) {
+            console.log("Created warrior:" + name);
         }
     }
 }

@@ -1,4 +1,5 @@
 // Transporter.js
+var Moving = require('moving');
 
 var Transporter = {
 	
@@ -10,13 +11,15 @@ var Transporter = {
             // transporting sources
             var construction = Game.getObjectById(targetID);
 
-            if (!construction || (construction && creep.transfer(construction, RESOURCE_ENERGY) == ERR_INVALID_TARGET))
+            if (!construction || (construction 
+                && (creep.transfer(construction, RESOURCE_ENERGY) !== ERR_NOT_IN_RANGE)))
             {
                 var construct = creep.pos.findClosestByRange(FIND_STRUCTURES, {
                     filter: (structure) => { 
                         return (structure.structureType == STRUCTURE_EXTENSION 
                             || structure.structureType == STRUCTURE_SPAWN 
-                            || structure.structureType == STRUCTURE_TOWER) 
+                            || structure.structureType == STRUCTURE_TOWER
+                            || structure.structureType == STRUCTURE_CONTAINER) 
                             && structure.energy < structure.energyCapacity; 
                     }
                 });
@@ -29,9 +32,16 @@ var Transporter = {
             }
 
             construction = Game.getObjectById(targetID);
-            if (construction && creep.transfer(construction, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE)
+            if (construction)
             {
-                creep.moveTo(construction);
+                if (creep.transfer(construction, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE)
+                {
+                    Moving.moveToOptimized(creep, construction, creep.room);
+                }
+                else if(creep.transfer(construction, RESOURCE_ENERGY) !== OK)
+                {
+                    creep.memory.activity = '';
+                }
             }
         }
     }

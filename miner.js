@@ -1,3 +1,5 @@
+var Moving = require('moving');
+
 var Miner = {
     tick: function (creep, activity, targetID) 
     {
@@ -20,7 +22,7 @@ var Miner = {
 		
             if (creep.harvest(source) == ERR_NOT_IN_RANGE)
             {
-                creep.moveTo(source);
+                Moving.moveToOptimized(creep, source);
             }
 
             if (creep.carry.energy == creep.carryCapacity)

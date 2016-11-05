@@ -1,13 +1,6 @@
 require('spawn');
 var m_Creep = require('creeps');
 
-var minimumHarvestersCount = 10;
-var minimumUpgradersCount = 4;
-var minimumBuildersCount = 6;
-var minimumWarriorsCount = 6;
-
-var spawnersCountLast = 0;
-
 module.exports.loop = function ()
 {
 

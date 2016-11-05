@@ -25,6 +25,22 @@ var Miner = require("miner");
 var Builder = require("builder");
 var Upgrader = require("upgrader");
 var Transport = require("transport");
+var Warrior = require("warrior");
+
+Creep.moveToOptimized = function(creep, target)
+{
+    var mTarget = creep.memory.target;
+
+    if(mTarget != target)
+    {
+        creep.memory.target = target;
+        creep.moveTo(target);
+    }
+    else
+    {
+        creep.reusePath();
+    }
+}
 
 Creep.tick = function(creep)
 {
@@ -66,7 +82,7 @@ Creep.tick = function(creep)
 	                    upgradersAmount += 1;
 	                }
 
-	                if (activ == 'building') 
+	                if (activ == 'building' || activ == 'repairing') 
 	                {
 	                    builderAmount += 1;
 	                }
@@ -80,33 +96,54 @@ Creep.tick = function(creep)
 	            busyAmount = transportersAmount + upgradersAmount + builderAmount;
 	            allAmount = busyAmount + freeAmount;
                 
-	            var structures = creep.room.find(FIND_STRUCTURES, {
+	            var constructions = creep.room.find(FIND_STRUCTURES, {
 	                filter: (structure) => { 
 	                    return (structure.structureType == STRUCTURE_EXTENSION 
                             || structure.structureType == STRUCTURE_SPAWN 
-                            || structure.structureType == STRUCTURE_TOWER) 
-                            && structure.energy < structure.energyCapacity; 
+                            || structure.structureType == STRUCTURE_TOWER
+                            || structure.structureType == STRUCTURE_CONTAINER)
+                           && structure.energy < structure.energyCapacity; 
 	                }
                 });
-                
-                var constructions = creep.room.find(FIND_MY_CONSTRUCTION_SITES);
 
-                if (creep.memory.activity == '' && constructions.length > 0 && (!structures.length || transportersAmount < Math.floor(allAmount / 4)))
-                {
-                    creep.say("building");
-                    creep.memory.activity = 'building';
-                }
+	            var constructionsRepair = creep.room.find(FIND_STRUCTURES, {
+	                filter: (structure) => { 
+	                    return (structure.structureType == STRUCTURE_EXTENSION 
+                            || structure.structureType == STRUCTURE_SPAWN 
+                            || structure.structureType == STRUCTURE_TOWER
+                            || structure.structureType == STRUCTURE_CONTAINER) 
+                            && structure.hits < structure.hitsMax; 
+	                }
+                });           
 
-                if (creep.memory.activity == '' && structures.length > 0 && (transportersAmount < minTransportersAmount || transportersAmount < (allAmount / 3)))
+                var structures = creep.room.find(FIND_MY_CONSTRUCTION_SITES);
+
+                //console.log(creep.name, creep.memory.activity == '', constructions.length > 0, structures.length == 0, builderAmount < Math.floor(allAmount / 3))
+                if (creep.memory.activity == '' && constructions.length > 0 && (transportersAmount < minTransportersAmount || transportersAmount < Math.floor(allAmount / 3)))
                 {
-                    creep.say("transport");
+                    //creep.say("transport");
                     creep.memory.activity = 'transporting';
                 }
 
-                if (creep.memory.activity == '' && (upgradersAmount < minUpgradersAmount || upgradersAmount < (allAmount / 3)))
+                if (creep.memory.activity == '' 
+                    && (constructions.length == 0 && constructionsRepair.length == 0 && structures.length == 0 
+                    || upgradersAmount < minUpgradersAmount || upgradersAmount < Math.floor(allAmount / 3))
+                )
                 {
-                    creep.say("upgrading");
+                    //creep.say("upgrading");
                     creep.memory.activity = 'upgrading';
+                }
+
+                if (creep.memory.activity == '' && constructionsRepair.length > 0 && (structures.length == 0 || constructions.length == 0 || builderAmount < Math.floor(allAmount / 6)))
+                {
+                    //creep.say("repairing");
+                    creep.memory.activity = 'repairing';
+                }
+                
+                    if (creep.memory.activity == '' && structures.length > 0 && (constructionsRepair.length == 0 || constructions.length == 0 || builderAmount < Math.floor(allAmount / 6)))
+                {
+                    //creep.say("building");
+                    creep.memory.activity = 'building';
                 }
             }
         }
@@ -118,5 +155,10 @@ Creep.tick = function(creep)
                 creep.memory.activity = 'mining';
             }
         }
+    }
+
+    if (type == 'warrior')
+    {
+        Warrior.tick(creep, activity, targetID);
     }
 };
