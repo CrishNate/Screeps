@@ -11,18 +11,19 @@ var Warrior = {
             // transporting sources
             var point = creep.memory.point;
 
-            if (!point)
-            {
-                var flag = creep.pos.findClosestByRange(FIND_FLAGS);
+            var flag = creep.pos.findClosestByRange(FIND_FLAGS);
 
-                if (flag)
-                {
-                    creep.say("defence");
-                    point = flag;
-                    creep.memory.point = flag;
-                }
+            if (!point
+                || point.pos.x != flag.pos.x
+                && point.pos.y != flag.pos.y
+                && point.room != flag.room)
+            {
+                creep.say("defence");
+                point = flag;
+                creep.memory.point = flag;
             }
-            else
+
+            if (point)
             {
                 var target = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS)
                 if (target && creep.pos.getRangeTo(target) < 15)

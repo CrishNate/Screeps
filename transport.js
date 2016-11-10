@@ -29,6 +29,10 @@ var Transporter = {
                     creep.memory.targetID = construct.id;
                     targetID = construct.id;
                 }
+                else
+                {
+                    creep.memory.activity = '';
+                }
             }
 
             construction = Game.getObjectById(targetID);
@@ -40,7 +44,7 @@ var Transporter = {
                 }
                 else if(creep.transfer(construction, RESOURCE_ENERGY) !== OK)
                 {
-                    creep.memory.activity = '';
+                    creep.memory.targetID = '';
                 }
             }
         }

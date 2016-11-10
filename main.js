@@ -1,5 +1,6 @@
 require('spawn');
 var m_Creep = require('creeps');
+var m_Source = require('source');
 
 module.exports.loop = function ()
 {
@@ -21,6 +22,7 @@ module.exports.loop = function ()
 	{
 		if(Game.creeps[index] == undefined)
 		{
+		    m_Source.updateUsers();
 			delete Memory.creeps[index];
 		}
 	}

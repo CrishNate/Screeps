@@ -19,6 +19,10 @@ var Builder = {
                     creep.memory.targetID = construct.id;
                     targetID = construct.id;
                 }
+                else
+                {
+                    creep.memory.activity = '';
+                }
             }
 
             // Working with target
@@ -34,6 +38,7 @@ var Builder = {
             else
             {
                 creep.memory.activity = '';
+                creep.memory.targetID = '';
             }
         }
 
@@ -48,7 +53,9 @@ var Builder = {
                     filter: (structure) => { 
                         return (structure.structureType == STRUCTURE_EXTENSION 
                             || structure.structureType == STRUCTURE_SPAWN 
+                            || structure.structureType == STRUCTURE_ROAD
                             || structure.structureType == STRUCTURE_TOWER
+                            || (structure.structureType == STRUCTURE_WALL && structure.hits < 10000)
                             || structure.structureType == STRUCTURE_CONTAINER) 
                             && structure.hits < structure.hitsMax; 
                     }
@@ -58,6 +65,10 @@ var Builder = {
                 {
                     creep.memory.targetID = construct.id;
                     targetID = construct.id;
+                }
+                else
+                {
+                    creep.memory.activity = '';
                 }
             }
 
@@ -70,10 +81,16 @@ var Builder = {
                 {
                     Moving.moveToOptimized(creep, construction);
                 }
-                else if (construction.hits == construction.hitsMax)
+                
+                if (construction.hits == construction.hitsMax)
                 {
-                    creep.memory.activity = '';
+                    creep.memory.targetID = '';
                 }
+            }
+            else
+            {
+                creep.memory.activity = '';
+                creep.memory.targetID = '';
             }
         }
     }

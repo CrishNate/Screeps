@@ -1,47 +1,45 @@
 // Moving.js
 var Moving = {
     moveToOptimized: function (creep, target)
-    {
-
-    }
+    { }
 };
 
 module.exports = Moving;
 
 Moving.moveToOptimized = function (creep, movePoint) {
     if (creep && creep.memory._move
-        && creep.memory._move.dest.x == movePoint.pos.x
-        && creep.memory._move.dest.y == movePoint.pos.y
-        && creep.memory._move.dest.room == movePoint.room.name
-        && creep.memory._move.path !== undefined
-        && ((creep.moveByPath(creep.memory._move.path) == OK
-        || creep.moveByPath(creep.memory._move.path) == ERR_TIRED)
-        || creep.pos.getRangeTo(movePoint) < 2))
-    { }
+        && new RoomPosition(creep.memory._move.dest.x, creep.memory._move.dest.y, creep.memory._move.dest.room).isEqualTo(movePoint)
+        && creep.memory._move.path !== undefined)
+    {
+        var pathResult = creep.moveByPath(creep.memory._move.path);
+
+        if (pathResult == OK || pathResult == ERR_TIRED || creep.pos.isNearTo(movePoint))
+        {
+            return pathResult;
+        }
+        else
+        {
+            creep.moveTo(movePoint);
+        }
+    }
     else
     {
-        //console.log(creep.moveByPath(creep.memory._move.path));
-        //console.log(creep.pos.getRangeTo(movePoint))
+        //creep.say(creep.moveByPath(creep.memory._move.path));
         creep.moveTo(movePoint);
     }
 }
 
 Moving.moveToOptimizedXY = function (creep, x, y, room) {
     if (creep && creep.memory._move
-        && creep.memory._move.dest.x == x
-        && creep.memory._move.dest.y == y
-        && creep.memory._move.dest.room == room
+        && new RoomPosition(creep.memory._move.dest.x, creep.memory._move.dest.y, creep.memory._move.dest.room).isEqualTo(new RoomPosition(x, y, room))
         && creep.memory._move.path !== undefined
-        && ((creep.moveByPath(creep.memory._move.path) == OK
-        || creep.moveByPath(creep.memory._move.path) == ERR_TIRED)
-        || creep.pos.getRangeTo(new RoomPosition(x, y, room)) < 2))
-    {
-        creep.moveByPath(creep.memory._move.path);
-    }
+        && (creep.moveByPath(creep.memory._move.path) == OK
+        || creep.moveByPath(creep.memory._move.path) == ERR_TIRED
+        || creep.pos.isNearTo(new RoomPosition(x, y, room))))
+    { }
     else
     {
-        //console.log(creep.pos.getRangeTo(new RoomPosition(x, y, room)))
-        //console.log(creep.moveByPath(creep.memory._move.path));
+        //creep.say(creep.moveByPath(creep.memory._move.path));
         creep.moveTo(new RoomPosition(x, y, room));
     }
 }

@@ -51,11 +51,6 @@ Creep.tick = function(creep)
     // Worker
     if (type == 'worker')
     {
-        Builder.tick(creep, activity, targetID);
-        Upgrader.tick(creep, activity, targetID);
-        Transport.tick(creep, activity, targetID);
-        Miner.tick(creep, activity, targetID);
-
         if (creep.carry.energy > 0)
         {
             if (activity == '')
@@ -110,7 +105,9 @@ Creep.tick = function(creep)
 	                filter: (structure) => { 
 	                    return (structure.structureType == STRUCTURE_EXTENSION 
                             || structure.structureType == STRUCTURE_SPAWN 
+                            || structure.structureType == STRUCTURE_ROAD
                             || structure.structureType == STRUCTURE_TOWER
+                            || (structure.structureType == STRUCTURE_WALL && structure.hits < 10000)
                             || structure.structureType == STRUCTURE_CONTAINER) 
                             && structure.hits < structure.hitsMax; 
 	                }
@@ -118,7 +115,6 @@ Creep.tick = function(creep)
 
                 var structures = creep.room.find(FIND_MY_CONSTRUCTION_SITES);
 
-                //console.log(creep.name, creep.memory.activity == '', constructions.length > 0, structures.length == 0, builderAmount < Math.floor(allAmount / 3))
                 if (creep.memory.activity == '' && constructions.length > 0 && (transportersAmount < minTransportersAmount || transportersAmount < Math.floor(allAmount / 3)))
                 {
                     //creep.say("transport");
@@ -126,7 +122,7 @@ Creep.tick = function(creep)
                 }
 
                 if (creep.memory.activity == '' 
-                    && (constructions.length == 0 && constructionsRepair.length == 0 && structures.length == 0 
+                    && ((constructions.length == 0 && constructionsRepair.length == 0 && structures.length == 0)
                     || upgradersAmount < minUpgradersAmount || upgradersAmount < Math.floor(allAmount / 3))
                 )
                 {
@@ -151,10 +147,15 @@ Creep.tick = function(creep)
         {
             if (activity !== 'mining')
             {
-                creep.say("mining");
+                //creep.say("mining");
                 creep.memory.activity = 'mining';
             }
         }
+
+        Builder.tick(creep, activity, targetID);
+        Upgrader.tick(creep, activity, targetID);
+        Transport.tick(creep, activity, targetID);
+        Miner.tick(creep, activity, targetID);
     }
 
     if (type == 'warrior')
