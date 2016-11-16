@@ -1,3 +1,8 @@
+/*
+ * Main
+ * File where all the magic happening
+ */
+
 require('spawn');
 var m_Creep = require('creeps');
 var m_Source = require('source');
@@ -18,9 +23,11 @@ module.exports.loop = function ()
 		spawn.createCreeps();
 	}
 	
-	for (let index in Memory.creeps)
-	{
-		if(Game.creeps[index] == undefined)
+    for (let index in Memory.creeps)
+    {
+        //console.log(Memory.creeps[index].id);
+
+	    if (!Game.creeps[index])
 		{
 		    m_Source.updateUsers();
 			delete Memory.creeps[index];

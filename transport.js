@@ -14,16 +14,10 @@ var Transporter = {
             if (!construction || (construction 
                 && (creep.transfer(construction, RESOURCE_ENERGY) !== ERR_NOT_IN_RANGE)))
             {
-                var construct = creep.pos.findClosestByRange(FIND_STRUCTURES, {
-                    filter: (structure) => { 
-                        return (structure.structureType == STRUCTURE_EXTENSION 
-                            || structure.structureType == STRUCTURE_SPAWN 
-                            || structure.structureType == STRUCTURE_TOWER
-                            || structure.structureType == STRUCTURE_CONTAINER) 
-                            && structure.energy < structure.energyCapacity; 
-                    }
+                var construct = creep.pos.findClosestByRange(FIND_MY_STRUCTURES, {
+                    filter: (structure) => { return structure.energy < structure.energyCapacity; }
                 });
-                                
+                 
                 if (construct)
                 {
                     creep.memory.targetID = construct.id;

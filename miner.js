@@ -1,5 +1,6 @@
 var Moving = require('moving');
 var SourceInfo = require('source');
+var Finding = require('finding');
 
 var Miner = {
     tick: function (creep, activity, targetID) 
@@ -11,41 +12,42 @@ var Miner = {
 
             //console.log(Game.resources[targetObj.id], Game.creeps[targetObj.id]);
 
-            if (!targetObj || creep.harvest(targetObj) != ERR_BUSY && (!targetObj.pos.lookFor(LOOK_SOURCES) && !targetObj.pos.lookFor(LOOK_CREEPS)))
+            if (!targetObj || creep.harvest(targetObj) != ERR_BUSY && (!targetObj.pos.lookFor(LOOK_SOURCES) && !Game.creeps[targetObj.name]))
             {
                 var sources = creep.room.find(FIND_SOURCES);
                 for (var index in sources)
                 {
-                    var source = sources[index];
-                    SourceInfo.add(source, creep.room);
+                    var sourceEl = sources[index];
+                    SourceInfo.add(sourceEl, creep.room);
                 }
 
-                for (var index in Game.flags)
-                {
-                    var flag = Game.flags[index];
-                    var source = creep.pos.findInRange(FIND_SOURCES, 1);
+                //for (var index in Game.flags)
+                //{
+                //    var flag = Game.flags[index];
+                //    var sourceFind = flag.pos.findInRange(FIND_SOURCES, 1);
 
-                    if(source) { sources.push(source); }
-                }
+                //    if(sourceFind) { sources.push(sourceFind); }
+                //}
+                //console.log(sources);
 
-                var source = creep.pos.findClosestByRange(sources, {
+                var sourceFindResult = creep.pos.findClosestByRange(sources, {
 	                filter: (source) => { 
 	                    return source.energy > 0 && (SourceInfo.usingAmount(source) < 2 && SourceInfo.usingAmount(source) !== -1);
 	                }
                 });
 
-                if (source)
+                if (sourceFindResult)
                 {
-                    creep.memory.targetID = source.id;
-                    targetID = source.id;
-                    SourceInfo.addUser(source, creep);
+                    creep.memory.targetID = sourceFindResult.id;
+                    targetID = sourceFindResult.id;
+                    SourceInfo.addUser(sourceFindResult, creep);
                     //console.log(creep.name, "set");
                 }
                 else
                 {
                     var creepTarget = creep.pos.findClosestByRange(FIND_MY_CREEPS, {
 	                    filter: (filterObj) => { 
-	                        return filterObj.carry.energy > 50 && (filterObj.memory.activity == "mining" || filterObj.memory.activity == "transporting");
+	                        return filterObj.carry.energy > filterObj.carryCapacity / 2;
 	                    }
                     });
                     
@@ -67,7 +69,7 @@ var Miner = {
             targetObj = Game.getObjectById(targetID);
 
             //if (targetObj){ console.log(creep.name, targetObj, targetObj.pos.lookFor(LOOK_CREEPS).length); } else { console.log(targetObj + "_" + targetID); }
-            if (targetObj && !targetObj.pos.lookFor(LOOK_CREEPS).length)
+            if (targetObj && !Game.creeps[targetObj.name])
             {
                 if (creep.harvest(targetObj) == ERR_INVALID_TARGET)
                 {
@@ -75,6 +77,8 @@ var Miner = {
                     creep.memory.targetID = '';
                     //console.log(creep.name, 'rem_2');
                 }
+                
+                //creep.say(SourceInfo.usingAmount(targetObj) + "_" + targetObj.pos.x + "_" + targetObj.pos.y);
 
                 if (creep.harvest(targetObj) == ERR_NOT_IN_RANGE)
                 {
@@ -94,7 +98,7 @@ var Miner = {
                     //console.log(creep.name, 'rem_4');
                 }
             }
-            else if(targetObj && targetObj.pos.lookFor(LOOK_CREEPS).length)
+            else if(targetObj && Game.creeps[targetObj.name])
             {
                 var transerResult = targetObj.transfer(creep, RESOURCE_ENERGY, targetObj.carry.energy / 2);
 
@@ -102,7 +106,8 @@ var Miner = {
                 {
                     Moving.moveToOptimized(creep, targetObj);
                 }
-                else if(transerResult == OK || targetObj.carry < 50)
+                 
+                if(transerResult == OK || targetObj.carry.energy < targetObj.carryCapacity / 2)
                 {
                     creep.memory.activity = '';
                     creep.memory.targetID = '';

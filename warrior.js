@@ -1,5 +1,6 @@
 // Warrior.js
 var Moving = require('moving');
+var Finding = require('finding');
 
 var Warrior = {
 	
@@ -11,33 +12,45 @@ var Warrior = {
             // transporting sources
             var point = creep.memory.point;
 
-            var flag = creep.pos.findClosestByRange(FIND_FLAGS);
+            var targetDefence = undefined;
 
-            if (!point
-                || point.pos.x != flag.pos.x
-                && point.pos.y != flag.pos.y
-                && point.room != flag.room)
+            var availablePoints = []
+            for (var index in Game.flags)
             {
-                creep.say("defence");
-                point = flag;
-                creep.memory.point = flag;
+                var flag = Game.flags[index];
+
+                if (flag.memory.defence)
+                {
+                    availablePoints.push(flag);
+                }
             }
 
-            if (point)
+            targetDefence = Finding.findClosestObjectTo(creep, availablePoints);
+
+            //if (!point || (targetDefence
+            //    && point.pos.x != targetDefence.pos.x
+            //    && point.pos.y != targetDefence.pos.y
+            //    && point.room != targetDefence.room))
+            //{
+            //    creep.say("defence");
+            //    point = targetDefence;
+            //    creep.memory.point = targetDefence;
+            //}
+
+            if (targetDefence)
             {
                 var target = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS)
                 if (target && creep.pos.getRangeTo(target) < 15)
                 {
                     if (creep.attack(target) == ERR_NOT_IN_RANGE)
                     {
-                        creep.say("hey");
+                        creep.say("hey, stop!");
                         Moving.moveToOptimized(creep, target);
                     }
                 }
                 else
                 {
-                    //Moving.moveToOptimized(creep, point, creep.room);
-                    Moving.moveToOptimizedXY(creep, point.pos.x, point.pos.y, point.room.name);
+                    Moving.moveToOptimized(creep, targetDefence);
                 }
             }
         }

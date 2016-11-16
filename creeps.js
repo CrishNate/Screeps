@@ -26,6 +26,7 @@ var Builder = require("builder");
 var Upgrader = require("upgrader");
 var Transport = require("transport");
 var Warrior = require("warrior");
+var Scout = require("scout");
 
 Creep.moveToOptimized = function(creep, target)
 {
@@ -58,6 +59,8 @@ Creep.tick = function(creep)
                 var transportersAmount = 0;
                 var upgradersAmount = 0;
                 var builderAmount = 0;
+                var scoutsAmount = 0;
+
                 var freeAmount = 0;
                 var busyAmount = 0;
                 var allAmount = 0;
@@ -67,46 +70,47 @@ Creep.tick = function(creep)
 	                var crep = Game.creeps[index];
 	                var activ = crep.memory.activity;
 
+	                if (activ == 'scouting') 
+	                    scoutsAmount += 1;
+
 	                if (activ == 'transporting') 
-	                {
 	                    transportersAmount += 1;
-	                }
 
 	                if (activ == 'upgrading') 
-	                {
 	                    upgradersAmount += 1;
-	                }
 
 	                if (activ == 'building' || activ == 'repairing') 
-	                {
 	                    builderAmount += 1;
-	                }
 
 	                if (activ == '')
-	                {
 	                    freeAmount += 1;
-	                }
 	            }
                 
 	            busyAmount = transportersAmount + upgradersAmount + builderAmount;
 	            allAmount = busyAmount + freeAmount;
                 
-	            var constructions = creep.room.find(FIND_STRUCTURES, {
-	                filter: (structure) => { 
-	                    return (structure.structureType == STRUCTURE_EXTENSION 
-                            || structure.structureType == STRUCTURE_SPAWN 
-                            || structure.structureType == STRUCTURE_TOWER
-                            || structure.structureType == STRUCTURE_CONTAINER)
-                           && structure.energy < structure.energyCapacity; 
-	                }
-                });
+	            var scoutingPoints = []
+	            for (var index in Game.flags) 
+	            {
+	                var flag = Game.flags[index];
 
-	            var constructionsRepair = creep.room.find(FIND_STRUCTURES, {
+	                if (flag.memory.scout) 
+	                {
+	                    scoutingPoints.push(flag);
+	                }
+	            }
+
+	            var constructions = creep.room.find(FIND_MY_STRUCTURES, {
+	                filter: (structure) => { return structure.energy < structure.energyCapacity; }
+                });
+                
+                var constructionsRepair = creep.room.find(FIND_STRUCTURES, {
 	                filter: (structure) => { 
 	                    return (structure.structureType == STRUCTURE_EXTENSION 
                             || structure.structureType == STRUCTURE_SPAWN 
                             || structure.structureType == STRUCTURE_ROAD
                             || structure.structureType == STRUCTURE_TOWER
+                            || (structure.structureType == STRUCTURE_RAMPART && structure.hits < 25000)
                             || (structure.structureType == STRUCTURE_WALL && structure.hits < 10000)
                             || structure.structureType == STRUCTURE_CONTAINER) 
                             && structure.hits < structure.hitsMax; 
@@ -114,6 +118,11 @@ Creep.tick = function(creep)
                 });           
 
                 var structures = creep.room.find(FIND_MY_CONSTRUCTION_SITES);
+
+                if (creep.memory.activity == '' && scoutingPoints.length > 0 && scoutsAmount < scoutingPoints.length)
+                {
+                    creep.memory.activity = 'scouting';
+                }
 
                 if (creep.memory.activity == '' && constructions.length > 0 && (transportersAmount < minTransportersAmount || transportersAmount < Math.floor(allAmount / 3)))
                 {
@@ -123,7 +132,7 @@ Creep.tick = function(creep)
 
                 if (creep.memory.activity == '' 
                     && ((constructions.length == 0 && constructionsRepair.length == 0 && structures.length == 0)
-                    || upgradersAmount < minUpgradersAmount || upgradersAmount < Math.floor(allAmount / 3))
+                    || upgradersAmount < minUpgradersAmount /*|| upgradersAmount < Math.floor(allAmount / 5)*/)
                 )
                 {
                     //creep.say("upgrading");
@@ -156,6 +165,7 @@ Creep.tick = function(creep)
         Upgrader.tick(creep, activity, targetID);
         Transport.tick(creep, activity, targetID);
         Miner.tick(creep, activity, targetID);
+        Scout.tick(creep, activity, targetID);
     }
 
     if (type == 'warrior')

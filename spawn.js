@@ -7,8 +7,9 @@
  * mod.thing == 'a thing'; // true
  */
 
-var minWorkersAmount = 8;
+var minWorkersAmount = 12;
 var minWarriorsAmount = 3;
+var minClaimerAmount = 1;
 
 Spawn.prototype.createConstructionSites = function (path, constuction) {
     for (var index in path) {
@@ -24,19 +25,19 @@ Spawn.prototype.createRoads = function ()
 {
     var sources = this.room.find(FIND_SOURCES);
 
-    //for (var index in sources)
-    //{
-    //var source = sources[index];
-    var source = this.pos.findClosestByPath(FIND_SOURCES);
-    var path = this.room.findPath(source.pos, this.pos, { ignoreRoads: true, ignoreCreeps: true })
-    this.createConstructionSites(path, STRUCTURE_ROAD)
+    for (var index in sources)
+    {
+        var source = sources[index];
+        var source = this.pos.findClosestByPath(FIND_SOURCES);
+        var path = this.room.findPath(source.pos, this.pos, { ignoreRoads: true, ignoreCreeps: true })
+        this.createConstructionSites(path, STRUCTURE_ROAD)
 
-    path = this.room.findPath(source.pos, this.room.controller.pos, { ignoreRoads: true, ignoreCreeps: true })
-    this.createConstructionSites(path, STRUCTURE_ROAD)
+        path = this.room.findPath(source.pos, this.room.controller.pos, { ignoreRoads: true, ignoreCreeps: true })
+        this.createConstructionSites(path, STRUCTURE_ROAD)
 
-    path = this.room.findPath(this.pos, this.room.controller.pos, { ignoreRoads: true, ignoreCreeps: true })
-    this.createConstructionSites(path, STRUCTURE_ROAD)
-    //}
+        path = this.room.findPath(this.pos, this.room.controller.pos, { ignoreRoads: true, ignoreCreeps: true })
+        this.createConstructionSites(path, STRUCTURE_ROAD)
+    }
 }
 
 Spawn.prototype.createRoadTo = function (object) 
@@ -83,23 +84,21 @@ Spawn.prototype.createCreeps = function ()
             warriorsAmount += 1;
         };
     }
-    var energy = this.getAmountOfAllEnergy();
 
     if (workersAmount < minWorkersAmount)
     {
-        var workerBodyparts = [WORK, MOVE, MOVE, CARRY, CARRY];
+        var workerBodyparts = [WORK, MOVE, MOVE, CARRY, CARRY]
 
         var energy = this.getAmountOfAllEnergy();
-        var energyDivision = energy / 2;
-        
 
-        for(var i = 0; i < Math.floor(energyDivision / 100); i++) { workerBodyparts.push(WORK); }
-        for(var i = 0; i < Math.floor(energyDivision / 50); i++) { workerBodyparts.push(MOVE); }
+        for(var i = 0; i < Math.floor(energy / (100 / 60) / 100); i++) { workerBodyparts.push(WORK); }
+        for(var i = 0; i < Math.floor(energy / (100 / 25) / 50); i++) { workerBodyparts.push(MOVE); }
+        for(var i = 0; i < Math.floor(energy / (100 / 15) / 50); i++) { workerBodyparts.push(CARRY); }
 
-        //console.log(this, energy, workerBodyparts);
+        console.log(this, energy, workerBodyparts);
 
         var name = this.createCreep(workerBodyparts, undefined,
-			{ type: 'worker', activity: '' })
+			{ type: 'worker' })
 
         if (!(name < 0))
         {
@@ -108,13 +107,13 @@ Spawn.prototype.createCreeps = function ()
     }
 
     if (warriorsAmount < minWarriorsAmount && workersAmount >= minWorkersAmount) {
-        var warriorBodyparts = [ATTACK, ATTACK, MOVE, MOVE];
+        var warriorBodyparts = [ATTACK, ATTACK, MOVE, MOVE, TOUGH, TOUGH, TOUGH, TOUGH];
 
         var energy = this.getAmountOfAllEnergy();
-        var energyDivision = energy / 2;
         
-        for(var i = 0; i < Math.floor(energyDivision / 80); i++) { warriorBodyparts.push(ATTACK); }
-        for(var i = 0; i < Math.floor(energyDivision / 50); i++) { warriorBodyparts.push(MOVE); }
+        for(var i = 0; i < Math.floor(energy / (100 / 50) / 80); i++) { warriorBodyparts.push(ATTACK); }
+        for(var i = 0; i < Math.floor(energy / (100 / 40) / 50); i++) { warriorBodyparts.push(MOVE); }
+        for(var i = 0; i < Math.floor(energy / (100 / 10) / 10); i++) { warriorBodyparts.push(TOUGH); }
 
         //console.log(this, energy, warriorBodyparts);
 

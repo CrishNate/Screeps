@@ -7,14 +7,22 @@ var Moving = {
 module.exports = Moving;
 
 Moving.moveToOptimized = function (creep, movePoint) {
+
     if (creep && creep.memory._move
         && new RoomPosition(creep.memory._move.dest.x, creep.memory._move.dest.y, creep.memory._move.dest.room).isEqualTo(movePoint)
         && creep.memory._move.path !== undefined)
     {
         var pathResult = creep.moveByPath(creep.memory._move.path);
-
-        if (pathResult == OK || pathResult == ERR_TIRED || creep.pos.isNearTo(movePoint))
+        if ((pathResult == OK && (!creep.memory.prevPos || (creep.memory.prevPos && !creep.pos.isEqualTo(creep.memory.prevPos)))) || pathResult == ERR_TIRED || creep.pos.isNearTo(movePoint))
         {
+            //creep.say(pathResult);
+            //console.log(creep.pos.isNearTo(movePoint), creep.pos.isEqualTo(creep.memory.prevPos));
+
+            if (pathResult == OK)
+            {
+                creep.memory.prevPos = creep.pos;
+            }
+
             return pathResult;
         }
         else

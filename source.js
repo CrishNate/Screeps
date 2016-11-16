@@ -79,9 +79,7 @@ SourceInfo.updateUsers = function ()
         {
             for (var index2 in source.using)
             {
-                var userID = source.using[index2];
-
-                if (userID && !Game.getObjectById(userID))
+                if (!Game.getObjectById(index2))
                 {
                     delete Memory.sources[index].using[index2];
                 }
