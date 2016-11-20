@@ -2,45 +2,50 @@
 var Moving = require('moving');
 var Finding = require('finding');
 
-var Scout = {
+var Claimer = {
 
-    tick: function (creep, activity, targetID) {
+    tick: function (creep, activity, targetID) 
+    { }
+};
 
-        // getting sources
-        if (activity == 'claiming') {
-            // transporting sources
+module.exports = Claimer;
 
-            var point = creep.memory.point;
+Claimer.tick = function (creep, activity, targetID)
+{
+    var targetObj = Game.flags[targetID];
 
-            var targetScout = undefined;
+    if (!targetObj)
+    {
+        var availablePoints = []
 
-            var availablePoints = []
-            for (var index in Game.flags) {
-                var flag = Game.flags[index];
+        for (var index in Game.flags)
+        {
+            var flag = Game.flags[index];
 
-                if (flag.memory.scout) {
-                    availablePoints.push(flag);
-                }
-            }
-
-            targetScout = Finding.findClosestObjectTo(creep, availablePoints);
-
-            //if (!point || (targetDefence
-            //    && point.pos.x != targetDefence.pos.x
-            //    && point.pos.y != targetDefence.pos.y
-            //    && point.room != targetDefence.room))
-            //{
-            //    creep.say("defence");
-            //    point = targetDefence;
-            //    creep.memory.point = targetDefence;
-            //}
-
-            if (targetScout && !creep.pos.isNearTo(targetScout))
+            if (flag.memory.claim != null && !Game.getObjectById(flag.memory.claim))
             {
-                Moving.moveToOptimized(creep, targetScout);
+                flag.memory.claim = creep.id;
+                creep.memory.targetID = flag.name;
+                targetID = flag.name;
+                targetObj = Game.flags[targetID];
+
+                break;
             }
         }
     }
-};
 
-module.exports = Scout;
+    if (targetObj)
+    {
+        var controller = creep.room.controller;
+
+        console.log(creep.attackController(controller))
+
+        if (controller && creep.reserveController(controller) == ERR_NOT_IN_RANGE)
+        {
+            //var result = creep.claimController(controller);
+            Moving.moveToOptimized(creep, controller);
+        }
+        else if (!creep.pos.isNearTo(targetObj))
+            Moving.moveToOptimized(creep, targetObj);
+    }
+};

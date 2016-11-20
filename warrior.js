@@ -7,51 +7,47 @@ var Warrior = {
     tick: function (creep, activity, targetID) 
     {
         // getting sources
-        if (activity == 'idle')
+        var point = creep.memory.point;
+
+        var targetDefence = undefined;
+
+        var availablePoints = []
+        for (var index in Game.flags)
         {
-            // transporting sources
-            var point = creep.memory.point;
+            var flag = Game.flags[index];
 
-            var targetDefence = undefined;
-
-            var availablePoints = []
-            for (var index in Game.flags)
+            if (flag.memory.defence)
             {
-                var flag = Game.flags[index];
+                availablePoints.push(flag);
+            }
+        }
 
-                if (flag.memory.defence)
+        targetDefence = Finding.findClosestObjectTo(creep, availablePoints);
+
+        //if (!point || (targetDefence
+        //    && point.pos.x != targetDefence.pos.x
+        //    && point.pos.y != targetDefence.pos.y
+        //    && point.room != targetDefence.room))
+        //{
+        //    creep.say("defence");
+        //    point = targetDefence;
+        //    creep.memory.point = targetDefence;
+        //}
+
+        if (targetDefence)
+        {
+            var target = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS)
+            if (target && creep.pos.getRangeTo(target) < 15)
+            {
+                if (creep.attack(target) == ERR_NOT_IN_RANGE)
                 {
-                    availablePoints.push(flag);
+                    creep.say("hey, stop!");
+                    Moving.moveToOptimized(creep, target);
                 }
             }
-
-            targetDefence = Finding.findClosestObjectTo(creep, availablePoints);
-
-            //if (!point || (targetDefence
-            //    && point.pos.x != targetDefence.pos.x
-            //    && point.pos.y != targetDefence.pos.y
-            //    && point.room != targetDefence.room))
-            //{
-            //    creep.say("defence");
-            //    point = targetDefence;
-            //    creep.memory.point = targetDefence;
-            //}
-
-            if (targetDefence)
+            else
             {
-                var target = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS)
-                if (target && creep.pos.getRangeTo(target) < 15)
-                {
-                    if (creep.attack(target) == ERR_NOT_IN_RANGE)
-                    {
-                        creep.say("hey, stop!");
-                        Moving.moveToOptimized(creep, target);
-                    }
-                }
-                else
-                {
-                    Moving.moveToOptimized(creep, targetDefence);
-                }
+                Moving.moveToOptimized(creep, targetDefence);
             }
         }
     }

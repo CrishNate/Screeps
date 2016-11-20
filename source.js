@@ -6,7 +6,7 @@ if (Memory.sources == undefined)
 }
 
 var SourceInfo = {
-    add: function(source, room)
+    add: function(source)
     { },
 
     usingAmount: function(source, room)
@@ -24,20 +24,22 @@ var SourceInfo = {
 
 module.exports = SourceInfo;
 
-SourceInfo.add = function (source, room)
+SourceInfo.add = function (source)
 {
     if (!Memory.sources[source.id])
     {
         var sourceInfo = {
             'id': source.id
-            , 'pos': { x: source.pos.x, y: source.pos.y, room: room.name }
-            , 'using': { }
+            , 'pos': { x: source.pos.x, y: source.pos.y, room: source.room.name }
+            , 'using': {}
+            , 'source': source
         };
 
         console.log(sourceInfo);
         Memory.sources[source.id] = sourceInfo;
     }
-    else { return -1; }
+    else
+        return -1;
 };
 
 SourceInfo.usingAmount = function (source)
@@ -46,7 +48,8 @@ SourceInfo.usingAmount = function (source)
     {
         return Object.keys(Memory.sources[source.id].using).length;
     }
-    else { return -1; }
+    else
+        return -1;
 },
 
 SourceInfo.addUser = function (source, creep)
@@ -56,17 +59,19 @@ SourceInfo.addUser = function (source, creep)
         Memory.sources[source.id].using[creep.id] = true;
         return 0;
     }
-    else { return -1; }
+    else
+        return -1;
 },
 
 SourceInfo.removeUser = function (source, creep)
 {
     if (Memory.sources[source.id])
     {
-        delete Memory.sources[source.id].using[creep.id];
+        Memory.sources[source.id].using[creep.id] = undefined;
         return 0;
     }
-    else { return -1; }
+    else
+        return -1;
 }
 
 SourceInfo.updateUsers = function ()
@@ -81,7 +86,8 @@ SourceInfo.updateUsers = function ()
             {
                 if (!Game.getObjectById(index2))
                 {
-                    delete Memory.sources[index].using[index2];
+                    //console.log("removed", index, index2)
+                    Memory.sources[index].using[index2] = undefined;
                 }
             }
         }

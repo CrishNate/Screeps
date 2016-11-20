@@ -13,11 +13,11 @@ Moving.moveToOptimized = function (creep, movePoint) {
         && creep.memory._move.path !== undefined)
     {
         var pathResult = creep.moveByPath(creep.memory._move.path);
-        if ((pathResult == OK && (!creep.memory.prevPos || (creep.memory.prevPos && !creep.pos.isEqualTo(creep.memory.prevPos)))) || pathResult == ERR_TIRED || creep.pos.isNearTo(movePoint))
+        if ((pathResult == OK
+            && (!creep.memory.prevPos || (creep.memory.prevPos
+            && !(creep.pos.x == creep.memory.prevPos.x && creep.pos.y == creep.memory.prevPos.y && creep.room.name == creep.memory.prevPos.roomName))))
+            || pathResult == ERR_TIRED || creep.pos.isNearTo(movePoint))
         {
-            //creep.say(pathResult);
-            //console.log(creep.pos.isNearTo(movePoint), creep.pos.isEqualTo(creep.memory.prevPos));
-
             if (pathResult == OK)
             {
                 creep.memory.prevPos = creep.pos;
@@ -35,6 +35,8 @@ Moving.moveToOptimized = function (creep, movePoint) {
         //creep.say(creep.moveByPath(creep.memory._move.path));
         creep.moveTo(movePoint);
     }
+
+    return -1;
 }
 
 Moving.moveToOptimizedXY = function (creep, x, y, room) {
