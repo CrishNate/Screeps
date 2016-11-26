@@ -26,7 +26,7 @@ var Spawn = {
     { },
     getAmountOfAllEnergy: function (spawn)
     { },
-    spawningCreep: function (spawn, bodyparts, bodypartsCount)
+    spawningCreep: function (spawn, bodyparts, bodypartsCount, energy, memory)
     { },
     createRoadTo: function (object1, object2)
     { },
@@ -106,11 +106,18 @@ Spawn.tick = function (spawn)
         var amountUpgraders = 0;
         var amountBuilders = 0;
         var amountWarriors = 0;
+        var amountHealers = 0;
         var amountScout = 0;
         var amountClaimer = 0;
 
         var needScouts = 0;
         var needClaimers = 0;
+
+        var amoutOfExtencions = spawn.room.find(FIND_STRUCTURES, {
+            filter: (structure) => { return (structure.structureType == STRUCTURE_EXTENSION) }
+        }).length;
+ 
+        var energy = this.getAmountOfAllEnergy(spawn);
 
         for (var index in Game.flags)
         {
@@ -144,6 +151,9 @@ Spawn.tick = function (spawn)
             if (creep.memory.activity == "warrior")
                 amountWarriors += 1;
 
+            if (creep.memory.activity == "healer")
+                amountHealers += 1;
+
             if (creep.memory.activity == "scout")
                 amountScout += 1;
 
@@ -157,10 +167,10 @@ Spawn.tick = function (spawn)
         if (amountTransporters < amountMiner)
         {
             var bodyparts = [CARRY, MOVE];
-            var bodypartsCount = 10;
+            var bodypartsCount = 20;
             var memory = { activity: 'transporter' };
 
-            creepSpawn = this.spawningCreep(spawn, bodyparts, bodypartsCount, memory);
+            creepSpawn = this.spawningCreep(spawn, bodyparts, bodypartsCount, energy, memory);
 
             if(!(creepSpawn < 0))
                 console.log("Spawning transporter:", creepSpawn);
@@ -174,7 +184,7 @@ Spawn.tick = function (spawn)
             var bodypartsCount = [6, 2, 4];
             var memory = { activity: 'miner' };
 
-            creepSpawn = this.spawningCreep(spawn, bodyparts, bodypartsCount, memory);
+            creepSpawn = this.spawningCreep(spawn, bodyparts, bodypartsCount, energy, memory);
 
             if(!(creepSpawn < 0))
                 console.log("Spawning miner:", creepSpawn);
@@ -188,7 +198,7 @@ Spawn.tick = function (spawn)
             var bodypartsCount = [10, 10, 4];
             var memory = { activity: 'upgrader' };
 
-            creepSpawn = this.spawningCreep(spawn, bodyparts, bodypartsCount, memory);
+            creepSpawn = this.spawningCreep(spawn, bodyparts, bodypartsCount, amoutOfExtencions * 50, memory);
 
             if(!(creepSpawn < 0))
                 console.log("Spawning upgrader:", creepSpawn);
@@ -196,13 +206,13 @@ Spawn.tick = function (spawn)
         
         // BUILDER
         if (!creepSpawn 
-            && amountBuilders < 2)
+            && amountBuilders < 3)
         {
             var bodyparts = [WORK, CARRY, MOVE];
             var bodypartsCount = -1;
             var memory = { activity: 'builder' };
 
-            creepSpawn = this.spawningCreep(spawn, bodyparts, bodypartsCount, memory);
+            creepSpawn = this.spawningCreep(spawn, bodyparts, bodypartsCount, amoutOfExtencions * 50, memory);
  
             if(!(creepSpawn < 0))
                 console.log("Spawning builder:", creepSpawn);
@@ -210,15 +220,29 @@ Spawn.tick = function (spawn)
 
         // WARRIOR
         if (!creepSpawn 
-            && amountWarriors < 3)
+            && amountWarriors < 2)
         {
-            var bodyparts = [ATTACK, MOVE];
+            //var bodyparts = [ATTACK, MOVE];
+            var bodyparts = [RANGED_ATTACK, MOVE];
             var bodypartsCount = -1;
             var memory = { activity: 'warrior' };
 
-            creepSpawn = this.spawningCreep(spawn, bodyparts, bodypartsCount, memory);
+            creepSpawn = this.spawningCreep(spawn, bodyparts, bodypartsCount, amoutOfExtencions * 50, memory);
             if(!(creepSpawn < 0))
                 console.log("Spawning warroir:", creepSpawn);
+        }
+
+        // HEALER
+        if (!creepSpawn 
+            && amountHealers < 1)
+        {
+            var bodyparts = [HEAL, MOVE];
+            var bodypartsCount = -1;
+            var memory = { activity: 'healer' };
+
+            creepSpawn = this.spawningCreep(spawn, bodyparts, bodypartsCount, amoutOfExtencions * 50, memory);
+            if(!(creepSpawn < 0))
+                console.log("Spawning healer:", creepSpawn);
         }
 
         // SCOUT
@@ -229,7 +253,7 @@ Spawn.tick = function (spawn)
             var bodypartsCount = 4;
             var memory = { activity: 'scout' };
 
-            creepSpawn = this.spawningCreep(spawn, bodyparts, bodypartsCount, memory);
+            creepSpawn = this.spawningCreep(spawn, bodyparts, bodypartsCount, energy, memory);
  
             if(!(creepSpawn < 0))
                 console.log("Spawning scout:", creepSpawn);
@@ -243,7 +267,7 @@ Spawn.tick = function (spawn)
             var bodypartsCount = [1, 1];
             var memory = { activity: 'claimer' };
 
-            creepSpawn = this.spawningCreep(spawn, bodyparts, bodypartsCount, memory);
+            creepSpawn = this.spawningCreep(spawn, bodyparts, bodypartsCount, energy, memory);
  
             if(!(creepSpawn < 0))
                 console.log("Spawning calimer:", creepSpawn);
@@ -255,23 +279,24 @@ Spawn.getAmountOfAllEnergy = function (spawn)
 {
     var energyAmount = spawn.energy;
     var extensions = spawn.room.find(FIND_STRUCTURES, {
-        filter: (structure) => { return (structure.structureType == STRUCTURE_EXTENSION) }
+        filter: (structure) => structure.structureType == STRUCTURE_EXTENSION
     });
 
     for(var index in extensions)
     {
         var extension = extensions[index];
-        if(extension.energy > 0) { energyAmount += extension.energy; }
+
+        if(extension.energy > 0)
+            energyAmount += extension.energy;
     }
 
     return energyAmount;
 }
 
-Spawn.spawningCreep = function (spawn, bodyparts, bodypartsCount, memory)
+Spawn.spawningCreep = function (spawn, bodyparts, bodypartsCount, energy, memory)
 {
     if(!spawn.spawning)
     {
-        var energy = this.getAmountOfAllEnergy(spawn);
         var creepBodyparts = [ ];
 
         var quit = false;
@@ -311,6 +336,8 @@ Spawn.spawningCreep = function (spawn, bodyparts, bodypartsCount, memory)
             step++;
         }
     }
+
+    //console.log(creepBodyparts);
 
     return spawn.createCreep(creepBodyparts, undefined, memory);
 }

@@ -18,6 +18,7 @@ var Transport = require("transport");
 var Warrior = require("warrior");
 var Scout = require("scout");
 var Claimer = require("claimer");
+var Healer = require("healer");
 
 var Creep = {
     tick: function(creep)
@@ -51,6 +52,9 @@ Creep.tick = function(creep)
 
     if (activity == "claimer")
         Claimer.tick(creep, activity, targetID);
+
+    if (activity == "healer")
+        Healer.tick(creep, activity, targetID);
 
     //if (type == 'worker')
     //{

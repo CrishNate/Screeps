@@ -14,7 +14,7 @@ Claimer.tick = function (creep, activity, targetID)
 {
     var targetObj = Game.flags[targetID];
 
-    if (!targetObj)
+    if (!targetObj && !creep.spawning)
     {
         var availablePoints = []
 
@@ -37,10 +37,9 @@ Claimer.tick = function (creep, activity, targetID)
     if (targetObj)
     {
         var controller = creep.room.controller;
+        var result = creep.reserveController(controller);
 
-        console.log(creep.attackController(controller))
-
-        if (controller && creep.reserveController(controller) == ERR_NOT_IN_RANGE)
+        if (!controller.my && creep.reserveController(controller) == ERR_NOT_IN_RANGE)
         {
             //var result = creep.claimController(controller);
             Moving.moveToOptimized(creep, controller);

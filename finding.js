@@ -19,7 +19,7 @@ module.exports = Finding;
 Finding.findClosestObjectTo = function (object, objects, params)
 {
     var distance = -1;
-    var objReturn = undefined;
+    var objReturn = null;
 
     for (var index in objects)
     {

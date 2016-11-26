@@ -18,32 +18,52 @@ Builder.tick = function (creep, activity, targetID)
 
     if (!targetObj && !creep.spawning)
     {
-        var construct;
+        var construct = [];
 
         if (!getSources)
         {
-            //var structureBusy = { };
+            // Find Sturcture that need to be repaired
+            var structureBusy = { };
 
-            //for (var index in Game.creeps)
-            //{
-            //    var eCreep = Game.creeps[index];
+            for (var index in Game.creeps)
+            {
+                var eCreep = Game.creeps[index];
 
-            //    if (eCreep.memory.activity == "builder" && eCreep.memory.repair)
-            //        structureBusy[eCreep.memory.repair] = true;
-            //}
+                if (eCreep.memory.activity == "builder" && eCreep.memory.repair)
+                    structureBusy[eCreep.memory.repair] = true;
+            }
 
             construct = creep.pos.findClosestByRange(FIND_STRUCTURES, {
-                filter: (i) => (i.structureType != STRUCTURE_WALL && i.structureType != STRUCTURE_RAMPART) && i.hits < i.hitsMax
+                filter: (i) => ((i.structureType != STRUCTURE_WALL && i.structureType != STRUCTURE_RAMPART) && i.hits < i.hitsMax
                 || (i.structureType == STRUCTURE_WALL && i.hits < 10000)
-                || (i.structureType == STRUCTURE_RAMPART && i.hits < 25000 && i.my)
+                || (i.structureType == STRUCTURE_RAMPART && i.hits < 25000 && i.my)) && !structureBusy[i.id]
             });
 
             if (!construct)
             {
-                construct = Finding.findClosestObjectTo(creep, Game.constructionSites, null);
+                for (var index in Game.creeps)
+                {
+                    var creepObj = Game.creeps[index];
 
-                if (construct)
-                    creep.memory.repair = construct.id;
+                    if (creepObj.room != creep.room)
+                        construct = creepObj.pos.findClosestByRange(FIND_STRUCTURES, {
+                            filter: (i) => ((i.structureType != STRUCTURE_WALL && i.structureType != STRUCTURE_RAMPART) && i.hits < i.hitsMax
+                            || (i.structureType == STRUCTURE_WALL && i.hits < 10000)
+                            || (i.structureType == STRUCTURE_RAMPART && i.hits < 25000 && i.my)) && !structureBusy[i.id]
+                        });
+
+                    if (construct)
+                        break;
+                }
+            }
+
+            if (construct)
+                creep.memory.repair = construct.id;
+
+            // Find Construction Site
+            if (!construct)
+            {
+                construct = Finding.findClosestObjectTo(creep, Game.constructionSites, null);
             }
 
         }
@@ -55,23 +75,24 @@ Builder.tick = function (creep, activity, targetID)
                     && i.structureType != STRUCTURE_EXTENSION
                     && i.structureType != STRUCTURE_TOWER)
                     //|| (i.structureType == STRUCTURE_CONTAINER && i.store[RESOURCE_ENERGY] > i.storeCapacity / 4)
+                    || (i.structureType == STRUCTURE_STORAGE && i.store[RESOURCE_ENERGY] > 200);
             });
 
-            if (!construct)
-            {
-                var allStorages = [];
+            //if (!construct)
+            //{
+            //    var allStorages = [];
 
-                for (var index in Game.spawns) 
-                {
-                    var spawn = Game.spawns[index];
-                    if (spawn.room.storage)
-                        allStorages.push(spawn.room.storage)
-                }
+            //    for (var index in Game.spawns) 
+            //    {
+            //        var spawn = Game.spawns[index];
+            //        if (spawn.room.storage)
+            //            allStorages.push(spawn.room.storage)
+            //    }
 
-                construct = Finding.findClosestObjectTo(creep, allStorages, function(i) {
-                    return i.store[RESOURCE_ENERGY] > 200; // &&i.id != creep.memory.takedFrom;
-                });
-            }
+            //    construct = Finding.findClosestObjectTo(creep, allStorages, function(i) {
+            //        return i.store[RESOURCE_ENERGY] > 200; // &&i.id != creep.memory.takedFrom;
+            //    });
+            //}
 
             //if (!construct)
             //    construct = creep.pos.findClosestByRange(FIND_STRUCTURES, {

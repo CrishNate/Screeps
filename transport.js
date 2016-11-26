@@ -24,24 +24,9 @@ Transporter.tick = function (creep, activity, targetID)
         if (transportSources)
         {
             construct = Finding.findClosestObjectTo(creep, Game.structures, function(i) {
-                return i.energy < i.energyCapacity;
+                return (i.energy < i.energyCapacity) 
+                    || (i.structureType == STRUCTURE_STORAGE && i.store[RESOURCE_ENERGY] < i.storeCapacity);
             });
-
-            if (!construct)
-            {
-                var allStorages = [];
-
-                for (var index in Game.spawns) 
-                {
-                    var spawn = Game.spawns[index];
-                    if (spawn.room.storage)
-                        allStorages.push(spawn.room.storage)
-                }
-
-                construct = Finding.findClosestObjectTo(creep, allStorages, function(i) {
-                    return i.store[RESOURCE_ENERGY] < i.storeCapacity; // &&i.id != creep.memory.takedFrom;
-                });
-            }
 
             if (!construct)
                 construct = Finding.findClosestObjectTo(creep, Game.creeps, function(i) {
@@ -49,8 +34,6 @@ Transporter.tick = function (creep, activity, targetID)
                         && i.memory.activity != "miner"
                         && i.memory.activity != "transporter";
                 });
-
-            //console.log(creep.name, construct)
         }
         else
         {
@@ -81,6 +64,25 @@ Transporter.tick = function (creep, activity, targetID)
 
             if (!construct)
             {
+                for (var index in Game.creeps)
+                {
+                    var creepObj = Game.creeps[index];
+
+                    if (creepObj.room != creep.room)
+                    {
+                        construct = creepObj.pos.findClosestByRange(FIND_STRUCTURES, {
+                            filter: (i) => i.structureType == STRUCTURE_CONTAINER
+                                && i.store[RESOURCE_ENERGY] > i.storeCapacity / 10
+                        });
+
+                        if (construct)
+                            break;
+                    }
+                }
+            }
+
+            if (!construct)
+            {
                 var creepBusy = { };
 
                 for (var index in Game.creeps)
@@ -101,6 +103,11 @@ Transporter.tick = function (creep, activity, targetID)
             //    construct = creep.pos.findClosestByRange(FIND_STRUCTURES, {
             //        filter: (i) => i.structureType == STRUCTURE_STORAGE && i.store[RESOURCE_ENERGY] < i.storeCapacity
             //    });
+
+            //if (!construct)
+            //    construct = Finding.findClosestObjectTo(creep, Game.structures, function(i) {
+            //        return  i.structureType == STRUCTURE_STORAGE && i.store[RESOURCE_ENERGY] < i.storeCapacity;
+            //    });
         }
 
         if (construct)
@@ -114,6 +121,7 @@ Transporter.tick = function (creep, activity, targetID)
     // Doing:
     if (targetObj)
     {
+
         if (transportSources)
         {
             var result = creep.transfer(targetObj, RESOURCE_ENERGY);
@@ -124,6 +132,12 @@ Transporter.tick = function (creep, activity, targetID)
             }
             else
             {
+                if (result == OK
+                    && (targetObj.structureType == STRUCTURE_STORAGE))
+                {
+                    creep.transfer(targetObj);
+                }
+
                 if (creep.carry.energy == 0)
                 {
                     creep.memory.targetID = '';

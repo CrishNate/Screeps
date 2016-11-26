@@ -1,6 +1,7 @@
 // Warrior.js
 var Moving = require('moving');
 var Finding = require('finding');
+var SourceInfo = require('source');
 
 var Scout = {
 
@@ -14,17 +15,15 @@ Scout.tick = function (creep, activity, targetID)
 
     var targetObj = Game.flags[targetID];
 
-    if (!targetObj)
+    if (!targetObj && !creep.spawning)
     {
-        creep.say(123)
-
         var availablePoints = []
 
         for (var index in Game.flags)
         {
             var flag = Game.flags[index];
 
-            if (flag.memory.scout && !Game.getObjectById(flag.memory.scout))
+            if (flag.memory.scout != undefined && !Game.getObjectById(flag.memory.scout))
             {
                 flag.memory.scout = creep.id;
                 creep.memory.targetID = flag.name;

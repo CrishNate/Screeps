@@ -6,6 +6,7 @@
 var m_Spawn = require("spawn");
 var m_Creep = require("creeps");
 var m_Source = require("source");
+var m_Tower = require("tower");
 
 module.exports.loop = function ()
 {
@@ -28,10 +29,22 @@ module.exports.loop = function ()
         }
     }
 	
+    // CREEPS
     for (var index in Game.creeps)
     {
         var creep = Game.creeps[index];
 		
         m_Creep.tick(creep);
+    }
+
+    // TOWERS
+    for (var index in Game.structures)
+    {
+        var structure = Game.structures[index];
+
+        if (structure.structureType == STRUCTURE_TOWER)
+        {
+            m_Tower.tick(structure);
+        }
     }
 }

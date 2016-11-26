@@ -39,10 +39,21 @@ var Warrior = {
             var target = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS)
             if (target && creep.pos.getRangeTo(target) < 15)
             {
-                if (creep.attack(target) == ERR_NOT_IN_RANGE)
+                var result = creep.attack(target);
+
+                if (result == ERR_NO_BODYPART)
+                    result = creep.rangedAttack(target);
+
+                if (result == ERR_NOT_IN_RANGE)
                 {
                     creep.say("hey, stop!");
                     Moving.moveToOptimized(creep, target);
+                }
+                else if (result == OK && creep.pos.getRangeTo(target) < 3)
+                {
+                    var spawn = Finding.findClosestObjectTo(creep, Game.spawns);
+
+                    Moving.moveToOptimized(creep, spawn);
                 }
             }
             else
