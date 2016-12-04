@@ -9,7 +9,10 @@ var SourceInfo = {
     add: function(source)
     { },
 
-    usingAmount: function(source, room)
+    using: function (source, creepActivity)
+    { },
+
+    usingAmount: function (source)
     { },
 
     addUser: function(source)
@@ -42,15 +45,23 @@ SourceInfo.add = function (source)
         return -1;
 };
 
-SourceInfo.usingAmount = function (source)
+SourceInfo.using = function (source)
 {
-    if (Memory.sources[source.id])
+    Memory.sources[source.id].using;
+}
+
+SourceInfo.usingAmount = function (source, condition)
+{
+    var amount = 0;
+
+    for (var userId in Memory.sources[source.id].using)
     {
-        return Object.keys(Memory.sources[source.id].using).length;
+        if (!condition || (condition && condition(Game.getObjectById(userId))))
+            amount++;
     }
-    else
-        return -1;
-},
+
+    return amount;
+}
 
 SourceInfo.addUser = function (source, creep)
 {
@@ -61,7 +72,7 @@ SourceInfo.addUser = function (source, creep)
     }
     else
         return -1;
-},
+}
 
 SourceInfo.removeUser = function (source, creep)
 {

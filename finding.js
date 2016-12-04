@@ -25,7 +25,7 @@ Finding.findClosestObjectTo = function (object, objects, params)
     {
         var obj = objects[index];
 
-        if ((!params || params(obj))
+        if ((!params || params && params(obj))
             && (distance == -1 || distance > obj.pos.getRangeTo(object)))
         {
             distance = obj.pos.getRangeTo(object);

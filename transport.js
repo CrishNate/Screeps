@@ -24,9 +24,13 @@ Transporter.tick = function (creep, activity, targetID)
         if (transportSources)
         {
             construct = Finding.findClosestObjectTo(creep, Game.structures, function(i) {
-                return (i.energy < i.energyCapacity) 
-                    || (i.structureType == STRUCTURE_STORAGE && i.store[RESOURCE_ENERGY] < i.storeCapacity);
+                return i.energy < i.energyCapacity;
             });
+
+            if (!construct)
+                construct = Finding.findClosestObjectTo(creep, Game.structures, function(i) {
+                    return i.structureType == STRUCTURE_STORAGE && i.store[RESOURCE_ENERGY] < i.storeCapacity;
+                });
 
             if (!construct)
                 construct = Finding.findClosestObjectTo(creep, Game.creeps, function(i) {
@@ -100,11 +104,6 @@ Transporter.tick = function (creep, activity, targetID)
             }
 
             //if (!construct)
-            //    construct = creep.pos.findClosestByRange(FIND_STRUCTURES, {
-            //        filter: (i) => i.structureType == STRUCTURE_STORAGE && i.store[RESOURCE_ENERGY] < i.storeCapacity
-            //    });
-
-            //if (!construct)
             //    construct = Finding.findClosestObjectTo(creep, Game.structures, function(i) {
             //        return  i.structureType == STRUCTURE_STORAGE && i.store[RESOURCE_ENERGY] < i.storeCapacity;
             //    });
@@ -147,13 +146,18 @@ Transporter.tick = function (creep, activity, targetID)
                 else
                     creep.memory.targetID = '';
             }
+            
+            if ((targetObj.energy && (targetObj.energy == targetObj.energyCapacity)) 
+                || (targetObj.store && (_.sum(targetObj.store) == targetObj.storeCapacity)) 
+                || (targetObj.carry && (_.sum(targetObj.carry) == targetObj.carryCapacity)))
+                creep.memory.targetID = '';
         }
         else
         {
             var result = creep.withdraw(targetObj, RESOURCE_ENERGY);
             var targetCapacity = 0;
 
-            if (result == OK)
+            if (result == OK && targetObj.store)
                 targetCapacity = targetObj.store[RESOURCE_ENERGY]
 
             if (result == ERR_INVALID_TARGET 

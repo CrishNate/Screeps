@@ -8,6 +8,12 @@ var m_Creep = require("creeps");
 var m_Source = require("source");
 var m_Tower = require("tower");
 
+if (!Memory.roads)
+    Memory.roads = {};
+
+if (!Memory.whitelist)
+    Memory.whitelist = {};
+
 module.exports.loop = function ()
 {
     for(var index in Game.spawns)

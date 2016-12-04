@@ -1,6 +1,8 @@
 // Builder.js
 var Moving = require('moving');
 var Finding = require('finding');
+var Roads = require('roads')
+var SourceInfo = require('source');
 
 var Builder = {
     tick: function (creep, activity, targetID) 
@@ -62,9 +64,14 @@ Builder.tick = function (creep, activity, targetID)
 
             // Find Construction Site
             if (!construct)
-            {
-                construct = Finding.findClosestObjectTo(creep, Game.constructionSites, null);
-            }
+                construct = Finding.findClosestObjectTo(creep, Game.constructionSites, function(i) {
+                    return i.structureType != STRUCTURE_ROAD
+                });
+
+            if (!construct)
+                construct = Finding.findClosestObjectTo(creep, Game.constructionSites, function(i) {
+                    return i.structureType == STRUCTURE_ROAD
+                });
 
         }
         else
@@ -104,6 +111,22 @@ Builder.tick = function (creep, activity, targetID)
             //            || (i.structureType == STRUCTURE_STORAGE && i.store[RESOURCE_ENERGY] > 200)
             //    });
 
+            if (!construct)
+            {
+                var sources = creep.room.find(FIND_SOURCES);
+
+                for (var index in sources)
+                {
+                    var source = sources[index];
+
+                    if (source && SourceInfo.usingAmount(source, function(i) { return (i && i.memory.activity != "miner") }) < 1)
+                    {
+                        construct = source;
+                        SourceInfo.addUser(source, creep);
+                        break;
+                    }
+                }
+            }
         }
 
         if (construct)
@@ -126,6 +149,11 @@ Builder.tick = function (creep, activity, targetID)
 
             if (result == ERR_NOT_IN_RANGE)
             {
+                if (targetObj.structureType == STRUCTURE_ROAD)
+                {
+                    Roads.addRoad(targetObj.pos.x, targetObj.pos.y, targetObj.room.name);
+                }
+
                 Moving.moveToOptimized(creep, targetObj, creep.room);
             }
             
@@ -145,19 +173,31 @@ Builder.tick = function (creep, activity, targetID)
         {
             var result = creep.withdraw(targetObj, RESOURCE_ENERGY);
 
+            if (result == ERR_INVALID_TARGET)
+                result = creep.harvest(targetObj);
+
             if (result == ERR_NOT_IN_RANGE)
             {
                 Moving.moveToOptimized(creep, targetObj, creep.room);
             }
-            else if (creep.carry.energy == 0)
-                    creep.memory.targetID = '';
+            else
+            {
+                if (Memory.sources[targetObj.id] && _.sum(creep.carry) == creep.carryCapacity)
+                    SourceInfo.removeUser(targetObj, creep);
+            }
         }
     }
 
     if (getSources && creep.carry.energy > 0)
     {
-        creep.memory.targetID = '';
-        creep.memory.getSources = false;
+        if (!targetObj || targetObj && (!Memory.sources[targetObj.id] || Memory.sources[targetObj.id] && _.sum(creep.carry) == creep.carryCapacity))
+        {
+            creep.memory.targetID = '';
+            creep.memory.getSources = false;
+
+            if (Memory.sources[targetObj.id])
+                SourceInfo.removeUser(targetObj, creep);
+        }
     }
 };
 

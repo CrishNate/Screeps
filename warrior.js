@@ -16,7 +16,7 @@ var Warrior = {
         {
             var flag = Game.flags[index];
 
-            if (flag.memory.defence)
+            if (flag.memory.squad)
             {
                 availablePoints.push(flag);
             }
@@ -36,7 +36,10 @@ var Warrior = {
 
         if (targetDefence)
         {
-            var target = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS)
+            var target = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS, {
+                filter: (i) => !Memory.whilelist[i.owner]
+            });
+
             if (target && creep.pos.getRangeTo(target) < 15)
             {
                 var result = creep.attack(target);
@@ -46,7 +49,6 @@ var Warrior = {
 
                 if (result == ERR_NOT_IN_RANGE)
                 {
-                    creep.say("hey, stop!");
                     Moving.moveToOptimized(creep, target);
                 }
                 else if (result == OK && creep.pos.getRangeTo(target) < 3)
