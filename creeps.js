@@ -19,8 +19,11 @@ var Warrior = require("warrior");
 var Scout = require("scout");
 var Claimer = require("claimer");
 var Healer = require("healer");
+var Tank = require("tank");
+
 var Finding = require("finding");
 var Moving = require('moving');
+var Spawn = require('spawn');
 
 var Creep = {
     tick: function(creep)
@@ -63,6 +66,9 @@ Creep.tick = function(creep)
 
         if (activity == "healer")
             Healer.tick(creep, activity, targetID);
+
+        if (activity == "tank")
+            Tank.tick(creep, activity, targetID);
     }
 };
 
@@ -72,10 +78,10 @@ Creep.renew = function(creep)
     var targetObj = Game.getObjectById(creep.memory.secondTarget);
 
     // target found
-    if (!creep.spawning && creep.ticksToLive < 300 && creep.memory.activity != "claimer")
+    if (!creep.spawning && creep.ticksToLive < 300 && creep.memory.activity != "claimer" || creep.memory.fixme)
     {
         var spawn = Finding.findClosestObjectTo(creep, Game.spawns, function (i) {
-            return i.energy > 0;
+            return Spawn.getAmountOfAllEnergy(i) > 100;
         });
 
         if (spawn)

@@ -101,6 +101,17 @@ Spawn.tick = function (spawn)
         this.init(spawn);
     }
 
+    if (spawn.memory.hits > spawn.hits)
+    {
+        spawn.memory.hits = spawn.hits;
+        console.log("Defence Activated!!!!");
+
+        if (!spawn.room.controller.safeModeCooldown)
+            spawn.room.controller.safeModeAvailable();
+    }
+    else
+        spawn.memory.hits = spawn.hits;
+
     if (!spawn.spawning)
     {
         var amountMiner = 0;
@@ -111,14 +122,17 @@ Spawn.tick = function (spawn)
         var amountHealers = 0;
         var amountScout = 0;
         var amountClaimer = 0;
+        var amountTanks = 0;
 
         var needScouts = 0;
         var needClaimers = 0;
         var needSquads = 0;
+        var needTanks = 0;
 
         var amoutOfExtencions = spawn.room.find(FIND_STRUCTURES, {
             filter: (structure) => { return (structure.structureType == STRUCTURE_EXTENSION) }
         }).length;
+
         var amoutOfMaxEnergyInRoom = amoutOfExtencions * 50 + 300;
 
         var energy = this.getAmountOfAllEnergy(spawn);
@@ -135,6 +149,9 @@ Spawn.tick = function (spawn)
 
             if (flag.memory.squad)
                 needSquads += 1;
+
+            if (flag.memory.tank)
+                needTanks += 1;
         }
 
         var amountSources = Object.keys(Memory.sources).length;
@@ -166,12 +183,15 @@ Spawn.tick = function (spawn)
 
             if (creep.memory.activity == "claimer")
                 amountClaimer += 1;
+
+            if (creep.memory.activity == "tank")
+                amountTanks += 1;
         }
 
         var creepSpawn = 0;
 
         // TRANSPORTER
-        if (amountTransporters < amountMiner)
+        if (amountTransporters < amountMiner * 1.5)
         {
             var bodyparts = [CARRY, MOVE];
             var bodypartsCount = 20;
@@ -199,7 +219,7 @@ Spawn.tick = function (spawn)
 
         // UPGRADER
         if (!creepSpawn 
-            && amountUpgraders < 2)
+            && amountUpgraders < 3)
         {
             var bodyparts = [WORK, CARRY, MOVE];
             var bodypartsCount = [10, 10, 4];
@@ -234,8 +254,7 @@ Spawn.tick = function (spawn)
             var bodypartsCount = -1;
             var memory = { activity: 'warrior' };
 
-            creepSpawn = this.spawningCreepSorted(spawn, bodyparts, bodypartsCount, amoutOfMaxEnergyInRoom, memory);
-            console.log(creepSpawn);
+            creepSpawn = this.spawningCreep(spawn, bodyparts, bodypartsCount, amoutOfMaxEnergyInRoom, memory);
 
             if(!(creepSpawn < 0))
                 console.log("Spawning warroir:", creepSpawn);
@@ -281,6 +300,68 @@ Spawn.tick = function (spawn)
             if(!(creepSpawn < 0))
                 console.log("Spawning calimer:", creepSpawn);
         }
+
+        // TANK
+        if (!creepSpawn 
+            && amountTanks < needTanks)
+        {
+            var bodyparts = [TOUGH, MOVE];
+            var bodypartsCount = [-1, 5];
+            var memory = { activity: 'tank' };
+
+            creepSpawn = this.spawningCreepSorted(spawn, bodyparts, bodypartsCount, amoutOfMaxEnergyInRoom, memory);
+ 
+            if(!(creepSpawn < 0))
+                console.log("Spawning tank:", creepSpawn);
+        }
+
+        if (!creepSpawn 
+            && energy == amoutOfMaxEnergyInRoom)
+        {
+            var suicideCreep = null;
+
+            for (var index in Game.creeps)
+            {
+                var creep = Game.creeps[index]
+                var asseblyEnergyAmout = 0;
+
+                if (creep.memory.asseblyEnergyAmout)
+                    asseblyEnergyAmout = creep.memory.asseblyEnergyAmout;
+                else
+                {
+
+                    for (var index2 in creep.body)
+                    {
+                        var body = creep.body[index2];
+
+                        if (BPCost[body.type])
+                            asseblyEnergyAmout += BPCost[body.type];
+                        else
+                        {
+                            console.log("Error: unvalid BPCost bodypart", body.type);
+                            break;
+                        }
+                    }
+
+                    if (asseblyEnergyAmout)
+                        creep.memory.asseblyEnergyAmout = asseblyEnergyAmout;
+                }
+
+                if (asseblyEnergyAmout && (asseblyEnergyAmout * (3 / 3)) < energy && !creep.memory.maxAssembled
+                    && (suicideCreep == null 
+                    || (Object.keys(creep.body) < Object.keys(suicideCreep.body) || (creep.ticksToLive < suicideCreep.ticksToLive && Object.keys(creep.body) == Object.keys(suicideCreep.body))))
+                    )
+                {
+                    suicideCreep = creep;
+                }
+            }
+
+            if (suicideCreep)
+            {
+                suicideCreep.suicide();
+                console.log(suicideCreep, "suicide");
+            }
+        }
     }
 }
 
@@ -310,10 +391,12 @@ Spawn.spawningCreep = function (spawn, bodyparts, bodypartsCount, energy, memory
 
         var quit = false;
         var step = 0;
+        var isMax = 0;
+
         while (!quit)
         {
             quit = true;
-
+            
             for (var index in bodyparts)
             {
                 if (bodypartsCount == -1 || bodypartsCount > 0 || bodypartsCount[index] > 0 || bodypartsCount[index] == -1)
@@ -326,10 +409,20 @@ Spawn.spawningCreep = function (spawn, bodyparts, bodypartsCount, energy, memory
                         energy -= BPCost[bodypart];
 
                         if (bodypartsCount > 0)
+                        {
                             bodypartsCount -= 1;
 
+                            if (bodypart == 0)
+                                isMax = -1;
+                        }
+
                         if (bodypartsCount[index] > 0)
+                        {
                             bodypartsCount[index] -= 1;
+
+                            if (bodypartsCount[index] == 0)
+                                isMax += 1;
+                        }
 
                         quit = false;
 
@@ -346,9 +439,16 @@ Spawn.spawningCreep = function (spawn, bodyparts, bodypartsCount, energy, memory
         }
     }
 
+    var creep = spawn.createCreep(creepBodyparts, undefined, memory)
+
+    if (isMax == -1 || isMax == bodyparts.count)
+    {
+        creep.memory.maxAssembled = true;
+    }
+
     //console.log(creepBodyparts);
 
-    return spawn.createCreep(creepBodyparts, undefined, memory);
+    return creep;
 }
 
 Spawn.spawningCreepSorted = function (spawn, bodyparts, bodypartsCount, energy, memory)
@@ -356,7 +456,7 @@ Spawn.spawningCreepSorted = function (spawn, bodyparts, bodypartsCount, energy, 
     var creepBodyparts = [ ];
     var bodypart = bodyparts[index];
 
-    var split = (100 / bodyparts.length);
+    var split = (1 / bodyparts.length);
 
     for (var index in bodyparts)
     {
@@ -368,15 +468,17 @@ Spawn.spawningCreepSorted = function (spawn, bodyparts, bodypartsCount, energy, 
         else if (bodypartsCount[index] > 0)
             count = bodypartsCount[index];
         else
-            count = ((energy / BPCost[bodypart]) / split) * 100;
-        // 350 / 50 / 50 * 100
+            count = (energy / BPCost[bodypart]) * split;
+        
+        // 300 / 50 / 50 * 100
         // 7 / 50 * 100
         // 0.45
         // 4.5
-        console.log(count, energy, BPCost[bodypart], split)
-
-        for (var i = 0; i < Math.foor(count); i++) { creepBodyparts.push(bodypart); }
+        //console.log(count, energy, bodyparts.length, BPCost[bodypart], split)
+        
+        for (var i = 0; i < Math.floor(count); i++) { creepBodyparts.push(bodypart); }
     }
+    //console.log(creepBodyparts);
 
     return spawn.createCreep(creepBodyparts, undefined, memory);
 }

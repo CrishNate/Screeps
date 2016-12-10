@@ -40,9 +40,15 @@ Miner.tick = function (creep, activity, targetID)
         }
         else
         {
-            findTarget = Finding.findClosestObjectTo(creep, Game.structures, function(i) {
-                return i.energy < i.energyCapacity;
+            construct = Finding.findClosestObjectTo(creep, Game.structures, function(i) {
+                return (i.structureType == STRUCTURE_SPAWN 
+                    || i.structureType == STRUCTURE_EXTENSION) && i.energy < i.energyCapacity;
             });
+
+            if (!construct)
+                construct = Finding.findClosestObjectTo(creep, Game.structures, function(i) {
+                    return i.energy < i.energyCapacity;
+                });
 
             if (!findTarget)
                 findTarget = Finding.findClosestObjectTo(creep, Game.structures, function(i) {
@@ -63,13 +69,10 @@ Miner.tick = function (creep, activity, targetID)
             targetID = findTarget.id;
             targetObj = Game.getObjectById(targetID);
         }
-
-        console.log(findTarget);
     }
 
     if (targetObj)
     {
-
         if (Memory.sources[targetObj.id])
         {
             if (creep.carry.energy < creep.carryCapacity)
@@ -95,7 +98,7 @@ Miner.tick = function (creep, activity, targetID)
 
                     if(!objContainer || objContainer && _.sum(objContainer.store) == objContainer.storeCapacity)
                     {
-                        console.log(creep.name, objContainer);
+                        //console.log(creep.name, objContainer);
 
                         var container = creep.pos.findInRange(FIND_STRUCTURES, 2, {
                             filter: (i) => i.structureType == STRUCTURE_CONTAINER && _.sum(i.store) != i.storeCapacity
@@ -124,10 +127,13 @@ Miner.tick = function (creep, activity, targetID)
             if (result == ERR_NOT_IN_RANGE)
                 Moving.moveToOptimized(creep, targetObj);
 
-            if (creep.carry.energy == 0)
-            {
+            if ((targetObj.energy && (targetObj.energy == targetObj.energyCapacity)) 
+                || (targetObj.store && (_.sum(targetObj.store) == targetObj.storeCapacity)) 
+                || (targetObj.carry && (_.sum(targetObj.carry) == targetObj.carryCapacity)))
                 creep.memory.targetID = '';
-            }
+
+            if (creep.carry.energy == 0)
+                creep.memory.targetID = '';
         }
     }
     else if (Memory.sources[targetID] && !Game.getObjectById(targetID))

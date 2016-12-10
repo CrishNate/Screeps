@@ -20,7 +20,7 @@ Healer.tick = function (creep, activity, targetID)
     {
         var flag = Game.flags[index];
 
-        if (flag.memory.defence)
+        if (flag.memory.squad)
         {
             availablePoints.push(flag);
         }

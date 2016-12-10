@@ -24,8 +24,14 @@ Transporter.tick = function (creep, activity, targetID)
         if (transportSources)
         {
             construct = Finding.findClosestObjectTo(creep, Game.structures, function(i) {
-                return i.energy < i.energyCapacity;
+                return (i.structureType == STRUCTURE_SPAWN 
+                    || i.structureType == STRUCTURE_EXTENSION) && i.energy < i.energyCapacity;
             });
+
+            if (!construct)
+                construct = Finding.findClosestObjectTo(creep, Game.structures, function(i) {
+                    return i.energy < i.energyCapacity;
+                });
 
             if (!construct)
                 construct = Finding.findClosestObjectTo(creep, Game.structures, function(i) {
@@ -63,7 +69,7 @@ Transporter.tick = function (creep, activity, targetID)
             if (!construct)
                 construct = creep.pos.findClosestByRange(FIND_STRUCTURES, {
                     filter: (i) => i.structureType == STRUCTURE_CONTAINER
-                        && i.store[RESOURCE_ENERGY] > i.storeCapacity / 10
+                        && i.store[RESOURCE_ENERGY] > creep.carryCapacity / 2
                 });
 
             if (!construct)

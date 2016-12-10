@@ -36,11 +36,18 @@ var Warrior = {
 
         if (targetDefence)
         {
-            var target = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS, {
-                filter: (i) => !Memory.whilelist[i.owner]
-            });
+            var target = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
 
-            if (target && creep.pos.getRangeTo(target) < 15)
+            //var target = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS, {
+            //    filter: (i) => !i.owner || (i.owner && Memory.whitelist[i.owner.username])
+            //});
+
+            if (!target)
+                target = targetDefence.pos.findClosestByRange(FIND_HOSTILE_STRUCTURES, {
+                    filter: (i) => i.structureType != STRUCTURE_ROAD && i.structureType != STRUCTURE_CONTAINER && (!i.owner || (i.owner && !Memory.whitelist[i.owner.username]))
+                });
+
+            if (target && creep.pos.getRangeTo(target) < 25)
             {
                 var result = creep.attack(target);
 

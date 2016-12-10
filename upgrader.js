@@ -39,6 +39,12 @@ var Upgrader = {
                 });
 
                 if (!target)
+                    target = creep.pos.findClosestByRange(FIND_STRUCTURES, {
+                        filter: (i) => i.structureType == STRUCTURE_CONTAINER
+                            && i.store[RESOURCE_ENERGY] > creep.carryCapacity
+                    });
+
+                if (!target)
                 {
                     var sources = creep.room.find(FIND_SOURCES);
 
@@ -107,7 +113,7 @@ var Upgrader = {
                 creep.memory.targetID = '';
                 creep.memory.getSources = false;
 
-                if (Memory.sources[targetObj.id])
+                if (targetObj && Memory.sources[targetObj.id])
                     SourceInfo.removeUser(targetObj, creep);
             }
         }

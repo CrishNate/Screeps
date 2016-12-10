@@ -38,7 +38,7 @@ Builder.tick = function (creep, activity, targetID)
             construct = creep.pos.findClosestByRange(FIND_STRUCTURES, {
                 filter: (i) => ((i.structureType != STRUCTURE_WALL && i.structureType != STRUCTURE_RAMPART) && i.hits < i.hitsMax
                 || (i.structureType == STRUCTURE_WALL && i.hits < 10000)
-                || (i.structureType == STRUCTURE_RAMPART && i.hits < 25000 && i.my)) && !structureBusy[i.id]
+                || (i.structureType == STRUCTURE_RAMPART && i.hits < 25000 && i.my)) && !structureBusy[i.id] && Memory.roads[i.x + "_" + i.y + "_" + i.room.name]
             });
 
             if (!construct)
@@ -51,7 +51,7 @@ Builder.tick = function (creep, activity, targetID)
                         construct = creepObj.pos.findClosestByRange(FIND_STRUCTURES, {
                             filter: (i) => ((i.structureType != STRUCTURE_WALL && i.structureType != STRUCTURE_RAMPART) && i.hits < i.hitsMax
                             || (i.structureType == STRUCTURE_WALL && i.hits < 10000)
-                            || (i.structureType == STRUCTURE_RAMPART && i.hits < 25000 && i.my)) && !structureBusy[i.id]
+                            || (i.structureType == STRUCTURE_RAMPART && i.hits < 25000 && i.my)) && !structureBusy[i.id] && Memory.roads[i.x + "_" + i.y + "_" + i.room.name]
                         });
 
                     if (construct)
@@ -84,6 +84,12 @@ Builder.tick = function (creep, activity, targetID)
                     //|| (i.structureType == STRUCTURE_CONTAINER && i.store[RESOURCE_ENERGY] > i.storeCapacity / 4)
                     || (i.structureType == STRUCTURE_STORAGE && i.store[RESOURCE_ENERGY] > 200);
             });
+
+            if (!construct)
+                construct = creep.pos.findClosestByRange(FIND_STRUCTURES, {
+                    filter: (i) => i.structureType == STRUCTURE_CONTAINER
+                        && i.store[RESOURCE_ENERGY] > creep.carryCapacity
+                });
 
             //if (!construct)
             //{
@@ -195,7 +201,7 @@ Builder.tick = function (creep, activity, targetID)
             creep.memory.targetID = '';
             creep.memory.getSources = false;
 
-            if (Memory.sources[targetObj.id])
+            if (targetObj && Memory.sources[targetObj.id])
                 SourceInfo.removeUser(targetObj, creep);
         }
     }

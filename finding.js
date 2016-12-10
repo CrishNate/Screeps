@@ -45,7 +45,6 @@ Finding.findClosestSourceTo = function (object)
 
         if (distance == -1 || distance > object.pos.getRangeTo(sourcePos) && SourceInfo.usingAmount(source) < 1)
         {
-            console.log(object.pos.getRangeTo(Game.getObjectById(obj.id)));
             distance = object.pos.getRangeTo(sourcePos);
             objReturn = obj;
         }
